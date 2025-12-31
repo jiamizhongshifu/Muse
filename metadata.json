@@ -1,0 +1,7 @@
+{
+  "name": "Muse",
+  "description": "Your English, Your Vibe. Muse is a 'language beauty mirror' that helps you express your intellect, humor, and personality in English with charisma.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

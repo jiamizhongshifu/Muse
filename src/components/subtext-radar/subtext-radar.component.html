@@ -1,0 +1,68 @@
+<section class="bg-slate-800/50 p-6 rounded-lg border border-slate-700 backdrop-blur-sm">
+  <h2 class="text-3xl font-serif text-amber-100 mb-6 flex items-baseline gap-x-3">
+    Subtext Radar
+    <span class="text-2xl text-slate-400 font-normal">潜台词雷达</span>
+  </h2>
+
+  @if (isMockMode()) {
+    <div class="mb-4 bg-sky-900/50 border border-sky-700 text-sky-200 p-3 rounded-md text-center text-sm">
+      <p>未检测到 API 密钥，当前为<span class="font-semibold">模拟模式</span>。</p>
+    </div>
+  }
+
+  <form (submit)="$event.preventDefault(); analyze()">
+    <div class="mb-6">
+      <label for="subtextInput" class="block mb-2 text-sm font-medium text-slate-400">需要分析的信息...</label>
+      <textarea
+        id="subtextInput"
+        rows="4"
+        [ngModel]="userInput()"
+        (ngModelChange)="userInput.set($event)"
+        name="subtextInput"
+        class="block p-4 w-full text-slate-200 bg-slate-900 rounded-lg border border-slate-700 focus:ring-amber-300 focus:border-amber-300 transition-colors duration-200"
+        placeholder="例如：'听起来很有趣。' 或 '我没事。'"
+      ></textarea>
+    </div>
+    
+    <button 
+      type="submit" 
+      [disabled]="isLoading()" 
+      class="w-full text-slate-900 bg-amber-200 hover:bg-amber-300 focus:ring-4 focus:outline-none focus:ring-amber-400 font-medium rounded-lg text-md px-5 py-3 text-center transition-all duration-200 disabled:bg-slate-600 disabled:cursor-not-allowed flex items-center justify-center">
+      @if (isLoading()) {
+        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        分析中...
+      } @else {
+        分析潜台词
+      }
+    </button>
+  </form>
+
+  @if (error()) {
+    <div class="mt-6 bg-red-900/50 border border-red-700 text-red-200 p-4 rounded-md">
+      <p>{{ error() }}</p>
+    </div>
+  }
+
+  @if (analysisResult(); as result) {
+    <div class="mt-8 space-y-6">
+      <!-- Tone -->
+      <div class="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
+        <h3 class="text-sm font-medium uppercase tracking-wider text-slate-400 mb-2">情绪语调</h3>
+        <p class="text-amber-200 text-lg font-semibold">{{ result.tone }}</p>
+      </div>
+      <!-- Analysis -->
+      <div class="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
+        <h3 class="text-sm font-medium uppercase tracking-wider text-slate-400 mb-2">分析</h3>
+        <p class="text-slate-300 whitespace-pre-wrap">{{ result.analysis }}</p>
+      </div>
+      <!-- Suggestion -->
+      <div class="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
+        <h3 class="text-sm font-medium uppercase tracking-wider text-slate-400 mb-2">回复建议</h3>
+        <p class="text-slate-300 whitespace-pre-wrap italic">"{{ result.suggestion }}"</p>
+      </div>
+    </div>
+  }
+</section>

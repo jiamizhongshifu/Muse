@@ -1,0 +1,118 @@
+<section class="bg-slate-800/50 p-6 rounded-lg border border-slate-700 backdrop-blur-sm">
+  <h2 class="text-3xl font-serif text-amber-100 mb-6 flex items-baseline gap-x-3">
+    Thought Equalizer
+    <span class="text-2xl text-slate-400 font-normal">思想高保真</span>
+  </h2>
+
+  @if (isMockMode()) {
+    <div class="mb-4 bg-sky-900/50 border border-sky-700 text-sky-200 p-3 rounded-md text-center text-sm">
+      <p>未检测到 API 密钥，当前为<span class="font-semibold">模拟模式</span>。</p>
+    </div>
+  }
+
+  <form (submit)="$event.preventDefault(); refineText()">
+    <div class="mb-6">
+      <label for="userInput" class="block mb-2 text-sm font-medium text-slate-400">您的想法...</label>
+      <textarea
+        id="userInput"
+        rows="4"
+        [ngModel]="userInput()"
+        (ngModelChange)="userInput.set($event)"
+        name="userInput"
+        class="block p-4 w-full text-slate-200 bg-slate-900 rounded-lg border border-slate-700 focus:ring-amber-300 focus:border-amber-300 transition-colors duration-200"
+        placeholder="例如：我觉得这个计划不太好。"
+      ></textarea>
+    </div>
+    
+    <div class="mb-6">
+      <label class="block mb-3 text-sm font-medium text-slate-400">选择您的格调</label>
+      <div class="grid grid-cols-3 md:grid-cols-5 gap-2">
+        @for (persona of personas; track persona) {
+          <div>
+            <input type="radio" name="persona" [id]="persona" [value]="persona" [checked]="selectedPersona() === persona" (change)="selectedPersona.set(persona)" class="hidden peer">
+            <label [for]="persona" class="inline-flex items-center justify-center w-full p-2 text-slate-300 bg-slate-800 border border-slate-700 rounded-md cursor-pointer peer-checked:border-amber-300 peer-checked:text-amber-200 hover:text-slate-100 hover:bg-slate-700/50 transition-all duration-200 text-center text-sm">                           
+              {{ persona === 'Custom' ? '自定义' : persona.replace("The ", "").replace("'", "") }}
+            </label>
+          </div>
+        }
+      </div>
+    </div>
+    
+    @if (selectedPersona() === 'Custom') {
+      <div class="mb-6">
+        <label for="customPersona" class="block mb-2 text-sm font-medium text-slate-400">描述您的自定义格调...</label>
+        <textarea
+          id="customPersona"
+          rows="3"
+          [ngModel]="customPersonaInput()"
+          (ngModelChange)="customPersonaInput.set($event)"
+          name="customPersona"
+          class="block p-4 w-full text-slate-200 bg-slate-900 rounded-lg border border-slate-700 focus:ring-amber-300 focus:border-amber-300 transition-colors duration-200"
+          placeholder="例如：Witty, slightly academic, uses metaphors from classic literature."
+        ></textarea>
+      </div>
+    }
+
+    <button 
+      type="submit" 
+      [disabled]="isLoading()" 
+      class="w-full text-slate-900 bg-amber-200 hover:bg-amber-300 focus:ring-4 focus:outline-none focus:ring-amber-400 font-medium rounded-lg text-md px-5 py-3 text-center transition-all duration-200 disabled:bg-slate-600 disabled:cursor-not-allowed flex items-center justify-center">
+      @if (isLoading()) {
+        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        优化中...
+      } @else {
+        优化
+      }
+    </button>
+  </form>
+
+  @if (error()) {
+    <div class="mt-4 bg-red-900/50 border border-red-700 text-red-200 p-3 rounded-md text-sm text-center">
+      <p>{{ error() }}</p>
+    </div>
+  }
+
+  @if (!refinedOutput() && selectedPersona() !== 'Custom') {
+    <div class="mt-8 p-4 bg-slate-900/50 border-2 border-dashed border-slate-700 rounded-lg">
+        <h3 class="text-lg font-serif text-amber-100 mb-3">工作原理</h3>
+        <p class="text-slate-400 mb-4">输入您的想法，选择一种<span class="text-amber-200/80">格调</span>，Muse 将会把您的语言转化为更具魅力的表达方式。</p>
+        <div class="space-y-2">
+           @for (persona of personas; track persona) {
+             @if(persona !== 'Custom') {
+                <div>
+                    <span class="font-semibold text-slate-300">{{ persona.replace("The ", "").replace("'", "") }}:</span>
+                    <span class="text-slate-400 text-sm ml-2">{{ personaDescriptions[persona] }}</span>
+                </div>
+             }
+           }
+        </div>
+    </div>
+  } @else if (refinedOutput(); as output) {
+    <div class="mt-8 space-y-6">
+      @for (item of [
+        { key: 'professional', title: '专业', value: output.professional },
+        { key: 'direct', title: '直接', value: output.direct },
+        { key: 'nuanced', title: '细腻', value: output.nuanced }
+      ]; track item.key) {
+        <div class="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="text-lg font-serif text-amber-200/80">{{ item.title }}</h3>
+            <button (click)="copyToClipboard(item.value, item.key)" class="text-slate-400 hover:text-amber-200 transition-colors">
+              @if (copied() === item.key) {
+                <span class="text-sm text-amber-200">已复制!</span>
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              }
+            </button>
+          </div>
+          <p class="text-slate-300 whitespace-pre-wrap">{{ item.value }}</p>
+        </div>
+      }
+    </div>
+  }
+</section>

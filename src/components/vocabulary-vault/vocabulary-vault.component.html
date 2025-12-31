@@ -1,0 +1,73 @@
+<section class="bg-slate-800/50 p-6 rounded-lg border border-slate-700 backdrop-blur-sm">
+  <h2 class="text-3xl font-serif text-amber-100 mb-6 flex items-baseline gap-x-3">
+    Vocabulary Vault
+    <span class="text-2xl text-slate-400 font-normal">词汇珠宝盒</span>
+  </h2>
+
+  @if (savedWords().length === 0) {
+    <div class="text-center py-12 border-2 border-dashed border-slate-700 rounded-lg">
+      <p class="text-slate-400">您的珠宝盒是空的。</p>
+      <p class="text-slate-500 text-sm mt-2">在“微醺实战”中选中文字即可收藏。</p>
+    </div>
+  } @else {
+    <div class="flex flex-col md:flex-row gap-6">
+      <!-- Word List -->
+      <div class="md:w-1/3 space-y-2">
+        @for(word of savedWords(); track word) {
+          <div class="group flex items-center justify-between p-3 rounded-md border border-slate-700 cursor-pointer transition-colors" [class.bg-slate-700]="selectedWord()?.word === word" [class.hover:bg-slate-700/50]="selectedWord()?.word !== word" (click)="showDefinition(word)">
+            <span class="text-slate-200" [class.text-amber-200]="selectedWord()?.word === word">{{ word }}</span>
+            <button (click)="$event.stopPropagation(); removeWord(word)" class="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- Definition View -->
+      <div class="md:w-2/3 flex-grow bg-slate-900/50 rounded-lg p-6 border border-slate-700 min-h-[200px] flex items-center justify-center">
+        @if (isLoadingDefinition()) {
+          <div class="flex items-center gap-x-3 text-slate-400">
+            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>获取定义中...</span>
+          </div>
+        } @else if (selectedWord(); as wordDetails) {
+           <div class="w-full">
+             <div class="flex items-baseline justify-between">
+                <div>
+                    <h3 class="text-2xl font-serif text-amber-100">{{ wordDetails.word }}</h3>
+                    <p class="text-slate-400 -mt-1">[{{ wordDetails.phonetic }}] - <span class="text-amber-200/90">{{ wordDetails.translation }}</span></p>
+                </div>
+                <button (click)="playWordAudio(wordDetails.word)" class="text-slate-400 hover:text-amber-200 transition-colors" [disabled]="isSpeaking()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 3.5a.75.75 0 01.75.75v11.5a.75.75 0 01-1.5 0V4.25A.75.75 0 0110 3.5zM6.5 7.75a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5zM13.5 7.75a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5z" />
+                    </svg>
+                </button>
+             </div>
+
+             <div class="space-y-4 mt-4">
+                <div>
+                  <p class="text-amber-200/80 text-sm font-medium uppercase tracking-wider mb-1">定义</p>
+                  <p class="text-slate-300">{{ wordDetails.definition }}</p>
+                </div>
+                <div>
+                  <p class="text-amber-200/80 text-sm font-medium uppercase tracking-wider mb-1">示例</p>
+                  <blockquote class="border-l-2 border-amber-300 pl-3 text-slate-400 italic">
+                    {{ wordDetails.example }}
+                  </blockquote>
+                </div>
+             </div>
+           </div>
+        } @else if (error()) {
+            <p class="text-red-400">{{ error() }}</p>
+        } @else {
+          <p class="text-slate-500">点击左侧词汇查看定义。</p>
+        }
+      </div>
+    </div>
+  }
+</section>

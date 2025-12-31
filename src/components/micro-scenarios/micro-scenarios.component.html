@@ -1,0 +1,224 @@
+<section class="bg-slate-800/50 p-6 rounded-lg border border-slate-700 backdrop-blur-sm">
+  @if(selectionPopover(); as popover) {
+    <div 
+      class="selection-popover fixed z-20 p-3 bg-slate-950 border border-slate-700 rounded-lg shadow-2xl w-64" 
+      [style.top.px]="popover.top" 
+      [style.left.px]="popover.left">
+        @if (popover.isFetchingDetails) {
+          <div class="flex items-center justify-center h-full">
+            <svg class="animate-spin h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class.opacity-75 fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+        } @else {
+          <div class="flex flex-col gap-y-2">
+            <div>
+              <span class="font-bold text-lg text-amber-100">{{ popover.text }}</span>
+              @if(popover.phonetic) {
+                <span class="text-slate-400 ml-2">[{{ popover.phonetic }}]</span>
+              }
+            </div>
+            @if(popover.translation) {
+              <div class="text-amber-200 font-semibold">{{ popover.translation }}</div>
+            }
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-700">
+              <button (click)="playSelectedWordAudio()" class="text-slate-400 hover:text-amber-200 transition-colors" title="Play audio">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10 3.5a.75.75 0 01.75.75v11.5a.75.75 0 01-1.5 0V4.25A.75.75 0 0110 3.5zM6.5 7.75a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5zM13.5 7.75a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5z" />
+                </svg>
+              </button>
+              <button (click)="saveSelection()" class="px-3 py-1 text-xs text-slate-900 bg-amber-200 rounded-md hover:bg-amber-300 transition-colors">
+                收藏
+              </button>
+            </div>
+          </div>
+        }
+    </div>
+  }
+
+  @if (!activeScenario()) {
+    <div>
+      <h2 class="text-3xl font-serif text-amber-100 mb-6 flex items-baseline gap-x-3">
+        Micro-Scenarios
+        <span class="text-2xl text-slate-400 font-normal">微醺实战</span>
+      </h2>
+      <p class="text-slate-400 mb-6">Choose a scenario for a no-pressure simulated conversation with voice interaction.</p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        @for (scenario of scenarios(); track scenario.id) {
+          <button (click)="selectScenario(scenario)" class="text-left bg-slate-800/50 rounded-lg border border-slate-700 backdrop-blur-sm h-full w-full hover:border-amber-300 hover:bg-slate-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-opacity-50 disabled:opacity-50 overflow-hidden" [disabled]="isLoading()">
+            @if (!scenario.imageUrl) {
+              <div class="w-full h-40 bg-slate-700 animate-pulse"></div>
+            } @else {
+              <img [src]="scenario.imageUrl" width="400" height="300" class="w-full h-40 object-cover" [alt]="scenario.title">
+            }
+            <div class="p-4">
+              <h3 class="text-lg font-serif text-amber-100">{{ scenario.title }}</h3>
+              <p class="text-slate-400 text-sm">{{ scenario.description }}</p>
+            </div>
+          </button>
+        }
+      </div>
+
+      <div class="mt-8 pt-6 border-t border-slate-700">
+        <h3 class="text-xl font-serif text-amber-100 mb-4">或者... 创建您自己的场景</h3>
+        <form (submit)="$event.preventDefault(); startCustomScenario()">
+          <textarea [(ngModel)]="customScenarioInput" name="customScenarioInput" rows="3" class="block p-3 w-full text-slate-200 bg-slate-900 rounded-lg border border-slate-700 focus:ring-amber-300 focus:border-amber-300 transition-colors" placeholder="例如：面试一份市场营销经理的工作..."></textarea>
+          <button type="submit" [disabled]="isLoading() || !customScenarioInput()" class="mt-3 w-full text-slate-900 bg-amber-200/80 hover:bg-amber-200 focus:ring-4 focus:outline-none focus:ring-amber-400 font-medium rounded-lg text-md px-5 py-2.5 text-center transition-all duration-200 disabled:bg-slate-600 disabled:cursor-not-allowed">
+            开始自定义场景
+          </button>
+        </form>
+        @if(error()){ <p class="text-red-400 text-sm mt-2 text-center">{{ error() }}</p> }
+      </div>
+
+    </div>
+  } @else {
+    <div class="flex flex-col h-[70vh]">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-2xl font-serif text-amber-100">{{ activeScenario()?.title }}</h2>
+          <p class="text-slate-400 text-sm">{{ activeScenario()?.description }}</p>
+        </div>
+        <button (click)="goBackToSelection()" class="text-slate-400 hover:text-amber-200 transition-colors text-sm">
+          Change Scenario
+        </button>
+      </div>
+      
+      <!-- Chat Area -->
+      <div #chatContainer class="relative flex-grow bg-slate-900/50 rounded-lg p-4 border border-slate-700 overflow-y-auto space-y-4">
+        @for (message of conversation(); track $index) {
+          <div class="flex" [class.justify-end]="message.author === 'user'">
+            <div class="p-3 rounded-lg max-w-xs md:max-w-md" [class.bg-amber-200/10]="message.author === 'ai'" [class.text-slate-200]="message.author === 'ai'" [class.bg-sky-500]="message.author === 'user'" [class.text-white]="message.author === 'user'">
+              <p class="whitespace-pre-wrap selection:bg-amber-200/20">{{ message.text }}</p>
+              
+              @if (message.isGeneratingImage) {
+                <div class="mt-3 rounded-md w-full aspect-[16/9] bg-slate-700 animate-pulse"></div>
+              } @else if (message.imageUrl) {
+                 <img [src]="message.imageUrl" [alt]="message.text" width="400" height="225" class="mt-3 rounded-md object-cover">
+              }
+
+              @if (message.author === 'ai') {
+                <div class="flex items-center justify-between mt-2">
+                  <button (click)="ttsService.speak(message.text)" class="text-slate-400 hover:text-amber-200" [disabled]="isSpeaking()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M10 3.5a.75.75 0 01.75.75v11.5a.75.75 0 01-1.5 0V4.25A.75.75 0 0110 3.5zM6.5 7.75a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5zM13.5 7.75a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5z" />
+                    </svg>
+                  </button>
+                   <button (click)="toggleTranslation($index)" class="text-xs text-slate-400 hover:text-amber-200 transition-colors disabled:opacity-50" [disabled]="message.isTranslating">
+                    @if(message.isTranslating) {
+                      <span>翻译中...</span>
+                    } @else {
+                      <span>查看翻译</span>
+                    }
+                  </button>
+                </div>
+                 @if(message.showTranslation && message.translation) {
+                  <div class="mt-2 pt-2 border-t border-amber-200/10 text-slate-300 text-sm">
+                    <p>{{ message.translation }}</p>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        }
+        @if (isLoading() && conversation().length > 0) {
+            <div class="flex">
+               <div class="p-3 rounded-lg bg-amber-200/10 text-slate-200">
+                  <span class="animate-pulse">...</span>
+               </div>
+            </div>
+        }
+      </div>
+
+      <!-- Input Area -->
+      <div class="mt-4 relative">
+        @if(suggestedReply(); as suggestion) {
+          <div #suggestionContainer class="absolute bottom-full left-0 right-0 mb-2 z-10 bg-slate-800/80 backdrop-blur-md p-3 rounded-lg border border-slate-600 animate-fade-in-up">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-xs text-amber-200 mb-1">推荐回答:</p>
+                <p class="text-slate-300 pr-4 selection:bg-amber-200/20">{{ suggestion.text }}</p>
+              </div>
+              <button (click)="dismissSuggestion()" class="text-slate-400 hover:text-white flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            @if(suggestion.showTranslation && suggestion.translation) {
+              <div class="mt-2 pt-2 border-t border-amber-200/10 text-slate-300 text-sm">
+                <p>{{ suggestion.translation }}</p>
+              </div>
+            }
+
+            <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-700/50">
+              <div class="flex gap-x-3 items-center">
+                <button (click)="ttsService.speak(suggestion.text)" class="text-slate-400 hover:text-amber-200" [disabled]="isSpeaking()">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 3.5a.75.75 0 01.75.75v11.5a.75.75 0 01-1.5 0V4.25A.75.75 0 0110 3.5zM6.5 7.75a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5zM13.5 7.75a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5z" />
+                  </svg>
+                </button>
+                <button (click)="toggleSuggestionTranslation()" class="text-xs text-slate-400 hover:text-amber-200 transition-colors disabled:opacity-50" [disabled]="suggestion.isTranslating">
+                    @if(suggestion.isTranslating) {
+                      <span>翻译中...</span>
+                    } @else {
+                      <span>中文翻译</span>
+                    }
+                </button>
+              </div>
+              <button (click)="useSuggestion()" class="px-3 py-1 text-xs text-slate-900 bg-amber-200 rounded-md hover:bg-amber-300">
+                  使用
+              </button>
+            </div>
+          </div>
+        }
+        @if(hint()){
+          <div class="text-center text-sm text-sky-300 p-2 mb-2">{{hint()}}</div>
+        }
+        <form (submit)="$event.preventDefault(); sendMessage()" class="flex gap-2">
+          <button (click)="toggleListening()" type="button" class="px-4 text-slate-400 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 relative" [disabled]="isLoading() || !speechService.isSupported()">
+            @if(speechService.isListening()) {
+              <span class="absolute inset-0 flex items-center justify-center">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+              </span>
+            }
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 z-10" [class.text-sky-400]="speechService.isListening()" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4z" />
+              <path d="M5.5 10.5a.5.5 0 01.5.5v1a4 4 0 004 4h0a4 4 0 004-4v-1a.5.5 0 011 0v1a5 5 0 01-4.5 4.975V17h3a.5.5 0 010 1h-7a.5.5 0 010-1h3v-1.525A5 5 0 014.5 12v-1a.5.5 0 01.5-.5z" />
+            </svg>
+          </button>
+          <input 
+            type="text" 
+            [(ngModel)]="userInput"
+            name="userInput"
+            class="flex-grow p-3 bg-slate-900 rounded-lg border border-slate-700 focus:ring-amber-300 focus:border-amber-300 transition-colors"
+            [placeholder]="speechService.isListening() ? 'Listening...' : 'Type or speak your response...'"
+            [disabled]="isLoading()">
+          <button (click)="getHint()" type="button" class="px-4 text-slate-400 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700" [disabled]="isLoading()">Hint</button>
+          <button (click)="getSuggestion()" type="button" class="px-4 text-slate-400 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 disabled:opacity-50 flex items-center justify-center min-w-[80px]" [disabled]="isLoading() || isSuggestingReply()">
+             @if (isSuggestingReply()) {
+                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            } @else {
+                <span>抄作业</span>
+            }
+          </button>
+          <button type="submit" class="px-5 py-3 text-slate-900 bg-amber-200 rounded-lg hover:bg-amber-300 disabled:bg-slate-600" [disabled]="isLoading() || !userInput()">Send</button>
+        </form>
+      </div>
+    </div>
+  }
+
+  @if (isLoading() && !activeScenario()) {
+    <div class="absolute inset-0 bg-slate-900/50 flex items-center justify-center">
+       <svg class="animate-spin h-8 w-8 text-amber-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </div>
+  }
+</section>

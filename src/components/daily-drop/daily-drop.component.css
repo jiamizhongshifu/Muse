@@ -1,0 +1,11 @@
+/* No custom styles needed, all handled by Tailwind CSS in the template */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.selection-popover {
+  transform: translateX(-50%);
+  transform-origin: center center;
+  animation: fadeIn 0.15s ease-out forwards;
+}

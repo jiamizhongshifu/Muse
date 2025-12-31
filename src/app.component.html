@@ -1,0 +1,73 @@
+<main class="min-h-screen bg-slate-900 text-slate-200 p-4 sm:p-8">
+  <div class="max-w-4xl mx-auto">
+    <header class="text-center mb-12">
+      <h1 class="text-5xl md:text-6xl font-bold text-amber-100 font-serif">
+        Muse
+      </h1>
+      <p class="text-slate-400 mt-2 text-lg">Your English, Your Vibe.</p>
+    </header>
+
+    @if (!activeScenario()) {
+      <div>
+        <h2 class="text-center text-xl text-slate-300 mb-8">Choose a scenario</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Scenario 1: Thought Equalizer -->
+          <button (click)="selectScenario('refine')" class="text-left p-6 bg-slate-800/50 rounded-lg border border-slate-700 backdrop-blur-sm h-full w-full hover:border-amber-300 hover:bg-slate-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-opacity-50">
+            <h3 class="text-2xl font-serif text-amber-100">Refine Expression</h3>
+            <p class="text-slate-400 text-lg">思想高保真</p>
+            <p class="mt-4 text-slate-300 font-light">Translate your intellect, not just your words. Elevate your writing with nuance and style.</p>
+          </button>
+
+          <!-- Scenario 2: Subtext Radar -->
+          <button (click)="selectScenario('analyze')" class="text-left p-6 bg-slate-800/50 rounded-lg border border-slate-700 backdrop-blur-sm h-full w-full hover:border-amber-300 hover:bg-slate-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-opacity-50">
+            <h3 class="text-2xl font-serif text-amber-100">Analyze Subtext</h3>
+            <p class="text-slate-400 text-lg">潜台词雷达</p>
+            <p class="mt-4 text-slate-300 font-light">Read between the lines. Decode the true meaning and emotion behind any message.</p>
+          </button>
+          
+          <!-- Scenario 3: Micro-Scenarios -->
+          <button (click)="selectScenario('practice')" class="text-left p-6 bg-slate-800/50 rounded-lg border border-slate-700 backdrop-blur-sm h-full w-full hover:border-amber-300 hover:bg-slate-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-opacity-50">
+            <h3 class="text-2xl font-serif text-amber-100">Micro-Scenarios</h3>
+            <p class="text-slate-400 text-lg">微醺实战</p>
+            <p class="mt-4 text-slate-300 font-light">Engage in short, no-pressure simulated conversations with voice interaction.</p>
+          </button>
+
+          <!-- Scenario 4: Daily Drop -->
+          <button (click)="selectScenario('daily_drop')" class="text-left p-6 bg-slate-800/50 rounded-lg border border-slate-700 backdrop-blur-sm h-full w-full hover:border-amber-300 hover:bg-slate-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-opacity-50">
+            <h3 class="text-2xl font-serif text-amber-100">Daily Drop</h3>
+            <p class="text-slate-400 text-lg">文化通货</p>
+            <p class="mt-4 text-slate-300 font-light">Your daily dose of culture. Receive evocative words and sophisticated talking points.</p>
+          </button>
+
+          <!-- Scenario 5: Vocabulary Vault -->
+          <button (click)="selectScenario('vocabulary')" class="text-left p-6 bg-slate-800/50 rounded-lg border border-slate-700 backdrop-blur-sm h-full w-full hover:border-amber-300 hover:bg-slate-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-opacity-50 md:col-span-2">
+            <h3 class="text-2xl font-serif text-amber-100">Vocabulary Vault</h3>
+            <p class="text-slate-400 text-lg">词汇珠宝盒</p>
+            <p class="mt-4 text-slate-300 font-light">Review and manage your personal collection of saved words and expressions.</p>
+          </button>
+        </div>
+      </div>
+    } @else {
+      <div>
+        <button (click)="selectScenario(null)" class="mb-8 inline-flex items-center gap-x-2 text-slate-400 hover:text-amber-200 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span>返回场景选择</span>
+        </button>
+
+        @switch (activeScenario()) {
+          @case ('refine') { <app-thought-equalizer></app-thought-equalizer> }
+          @case ('analyze') { <app-subtext-radar></app-subtext-radar> }
+          @case ('practice') { <app-micro-scenarios></app-micro-scenarios> }
+          @case ('daily_drop') { <app-daily-drop></app-daily-drop> }
+          @case ('vocabulary') { <app-vocabulary-vault></app-vocabulary-vault> }
+        }
+      </div>
+    }
+
+    <footer class="text-center mt-16 text-slate-500 text-sm">
+      <p>&copy; 2025 Muse. Language is your outfit.</p>
+    </footer>
+  </div>
+</main>
